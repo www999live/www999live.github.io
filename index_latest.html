@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QR Scanner</title>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #111;
+      color: white;
+    }
+    #qr-reader {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>QR Inventory Scanner</h2>
+<div style="margin-bottom:10px;">
+  <select id="cameraSelect"></select>
+  <button id="switchBtn" type="button">Switch Camera</button>
+</div>
+<div id="qr-reader"></div>
+
+<form id="form">
+  <input id="memberName" placeholder="Scanned Code" readonly>
+  <input id="attendTime" placeholder="Attendance Time">
+  <input id="tutor" placeholder="Tutor?">
+  <button type="submit">Submit</button>
+</form>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby66J4a1-yCsF67eSEP4VDlsf57tQ13uTgY4qDcRY80besby4aHzrQwC-9uuLwoBKmpVQ/exec";
+const beep = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+let html5QrCode;
+let currentCameraId;
+let cameras = [];
+
+async function startScanner(cameraId) {
+  if (html5QrCode) {
+    await html5QrCode.stop().catch(() => {});
+  }
+
+  html5QrCode = new Html5Qrcode("qr-reader");
+  currentCameraId = cameraId;
+
+  await html5QrCode.start(
+    cameraId,
+    { fps: 10, qrbox: 250 },
+  decodedText => {
+    const memberNameInput = document.getElementById("memberName");
+
+  // Prevent duplicate scans
+  if (memberNameInput.value === decodedText) return;
+
+  memberNameInput.value = decodedText;
+
+  // 🔊 Beep
+  beep.currentTime = 0;
+  beep.play().catch(() => {});
+
+  // ⚡ Auto-submit after short delay
+  setTimeout(() => {
+    document.getElementById("form").dispatchEvent(new Event("submit"));
+  }, 300);
+}
+  );
+}
+
+async function initCamera() {
+  cameras = await Html5Qrcode.getCameras();
+
+  if (cameras.length === 0) {
+    alert("No cameras found");
+    return;
+  }
+
+  // Try to pick back camera first
+  let backCamera = cameras.find(cam =>
+    cam.label.toLowerCase().includes("back") ||
+    cam.label.toLowerCase().includes("rear")
+  );
+
+  const defaultCamera = backCamera || cameras[0];
+  currentCameraId = defaultCamera.id;
+  populateCameraDropdown();
+  startScanner(defaultCamera.id);
+}
+
+function populateCameraDropdown() {
+  const select = document.getElementById("cameraSelect");
+  select.innerHTML = "";
+
+  cameras.forEach(cam => {
+    const option = document.createElement("option");
+    option.value = cam.id;
+    option.text = cam.label || `Camera ${select.length + 1}`;
+    select.appendChild(option);
+  });
+
+  select.value = currentCameraId;
+}
+
+// Switch camera via dropdown
+document.getElementById("cameraSelect").addEventListener("change", function () {
+  startScanner(this.value);
+});
+
+// Quick toggle button (front/back)
+document.getElementById("switchBtn").addEventListener("click", () => {
+  if (cameras.length < 2) return;
+
+  let currentIndex = cameras.findIndex(c => c.id === currentCameraId);
+  let nextIndex = (currentIndex + 1) % cameras.length;
+
+  startScanner(cameras[nextIndex].id);
+  document.getElementById("cameraSelect").value = cameras[nextIndex].id;
+});
+
+initCamera();
+
+// FORM SUBMIT
+let isSubmitting = false;
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const data = {
+    memberName: document.getElementById("memberName").value,
+    attendanceTime: document.getElementById("attendTime").value,
+    tutor: document.getElementById("tutor").value
+     };
+
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain" // 👈 IMPORTANT CHANGE
+      },
+      body: JSON.stringify(data)
+    });
+
+    const text = await response.text();
+    console.log("Server response:", text);
+
+    alert("Saved!");
+    e.target.reset();
+    document.getElementById("memberName").value = "";
+
+  } catch (err) {
+    console.error("Submit failed:", err);
+    alert("Error submitting data. Check console.");
+  }});
+</script>
+
+</body>
+</html>
