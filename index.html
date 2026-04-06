@@ -31,7 +31,7 @@
 <h2>Seniornet Attendance Scanner</h2>
 <div style="margin-bottom:10px;">
   <select id="cameraSelect"></select>
-  <button id="switchBtn" type="button">Switch Camera</button>
+
 </div>
 <div id="qr-reader"></div>
 
@@ -117,17 +117,6 @@ function populateCameraDropdown() {
 // Switch camera via dropdown
 document.getElementById("cameraSelect").addEventListener("change", function () {
   startScanner(this.value);
-});
-
-// Quick toggle button (front/back)
-document.getElementById("switchBtn").addEventListener("click", () => {
-  if (cameras.length < 2) return;
-
-  let currentIndex = cameras.findIndex(c => c.id === currentCameraId);
-  let nextIndex = (currentIndex + 1) % cameras.length;
-
-  startScanner(cameras[nextIndex].id);
-  document.getElementById("cameraSelect").value = cameras[nextIndex].id;
 });
 
 initCamera();
