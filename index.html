@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>QR Scanner</title>
+  <title>Seniornet Attendance Scanner</title>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -28,13 +28,15 @@
 
 <body>
 
-<h2>QR Inventory Scanner</h2>
+<h2>Seniornet Attendance Scanner</h2>
 <div style="margin-bottom:10px;">
   <select id="cameraSelect"></select>
-  <button id="switchBtn" type="button">Switch Camera</button>
+
 </div>
 <div id="qr-reader"></div>
-
+<p style="text-align:center; font-size:14px; color:#aaa;">
+  Scanning to: <strong id="sheetNameDisplay">Loading...</strong>
+</p>
 <form id="form">
   <input id="memberName" placeholder="Scanned Code" readonly>
   <input id="attendTime" placeholder="Attendance Time">
@@ -43,7 +45,8 @@
 </form>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby66J4a1-yCsF67eSEP4VDlsf57tQ13uTgY4qDcRY80besby4aHzrQwC-9uuLwoBKmpVQ/exec";
+// This is the Deploymenmt URL of the Apps Script web app
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8z_lR_sqoBNVjNpGVPCXLKmZXtUPDRgp6EOnbpQKICTSaF-h6jNpW_neuQXiHwuzD/exec";
 const beep = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 let html5QrCode;
 let currentCameraId;
@@ -119,17 +122,6 @@ document.getElementById("cameraSelect").addEventListener("change", function () {
   startScanner(this.value);
 });
 
-// Quick toggle button (front/back)
-document.getElementById("switchBtn").addEventListener("click", () => {
-  if (cameras.length < 2) return;
-
-  let currentIndex = cameras.findIndex(c => c.id === currentCameraId);
-  let nextIndex = (currentIndex + 1) % cameras.length;
-
-  startScanner(cameras[nextIndex].id);
-  document.getElementById("cameraSelect").value = cameras[nextIndex].id;
-});
-
 initCamera();
 
 // FORM SUBMIT
@@ -163,6 +155,18 @@ document.getElementById("form").addEventListener("submit", async (e) => {
     console.error("Submit failed:", err);
     alert("Error submitting data. Check console.");
   }});
+
+  function loadSheetName() {
+  const script = document.createElement("script");
+  script.src = SCRIPT_URL + "?callback=handleSheetName";
+  document.body.appendChild(script);
+}
+
+function handleSheetName(data) {
+  document.getElementById("sheetNameDisplay").textContent = data.sheetName;
+}
+
+loadSheetName();
 </script>
 
 </body>
