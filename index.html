@@ -34,12 +34,13 @@
 
 </div>
 <div id="qr-reader"></div>
-
+<p style="text-align:center; font-size:14px; color:#aaa;">
+  Recording to: <strong id="sheetNameDisplay">Loading...</strong>
+</p>
 <form id="form">
   <input id="memberName" placeholder="Scanned Code" readonly>
   <input id="attendTime" placeholder="Attendance Time">
   <input id="tutor" placeholder="Tutor?">
-  <input type="text" id="destinationSheet" name="destinationSheet" placeholder="">
   <button type="submit">Submit</button>
 </form>
 
@@ -153,6 +154,20 @@ document.getElementById("form").addEventListener("submit", async (e) => {
     console.error("Submit failed:", err);
     alert("Error submitting data. Check console.");
   }});
+
+  async function loadSheetName() {
+  try {
+    const response = await fetch(SCRIPT_URL);
+    const data = await response.json();
+
+    document.getElementById("sheetNameDisplay").textContent = data.sheetName;
+
+  } catch (err) {
+    console.error("Failed to load sheet name", err);
+  }
+}
+
+loadSheetName();
 </script>
 
 </body>
