@@ -46,7 +46,7 @@
 
 <script>
 // This is the Deploymenmt URL of the Apps Script web app
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8z_lR_sqoBNVjNpGVPCXLKmZXtUPDRgp6EOnbpQKICTSaF-h6jNpW_neuQXiHwuzD/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1SQ9ONwI7MFpVOmYRtNcD0t8W65Fkou7PjJ-M9wWzL-z-iT-6fhYOcmJ7kJJSTGlX/exec";
 const beep = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 let html5QrCode;
 let currentCameraId;
@@ -78,7 +78,7 @@ async function startScanner(cameraId) {
   // ⚡ Auto-submit after short delay
   setTimeout(() => {
     document.getElementById("form").dispatchEvent(new Event("submit"));
-  }, 300);
+  }, 500);
 }
   );
 }
@@ -146,10 +146,6 @@ document.getElementById("form").addEventListener("submit", async (e) => {
 
     const text = await response.text();
     console.log("Server response:", text);
-
-    alert("Saved!");
-    e.target.reset();
-    document.getElementById("memberName").value = "";
 
   } catch (err) {
     console.error("Submit failed:", err);
